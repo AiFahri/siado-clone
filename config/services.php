@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'supabase' => [
+        'api_key' => env('SUPABASE_API_KEY'),
+        'project_url' => env('SUPABASE_PROJECT_URL'),
+        'bucket_name' => env('SUPABASE_BUCKET_NAME'),
+    ],
+
 ];
