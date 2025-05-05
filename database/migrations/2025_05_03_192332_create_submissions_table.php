@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('submissions', function (Blueprint $table) {
             $table->id();
-            $table->text('answer');
+            $table->text('answer')->nullable();
             $table->text('file_url')->nullable();
             $table->decimal('grade', total: 5, places: 2)->nullable();
             $table->text('feedback')->nullable();
             $table->timestamps();
 
-            $table->foreignId('user_id')->constrained();
-            $table->foreignId('assignment_id')->constrained();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('assignment_id')->constrained()->onDelete('cascade');
         });
     }
 
