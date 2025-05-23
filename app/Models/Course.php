@@ -20,4 +20,19 @@ class Course extends Model
     {
         return $this->hasMany(Assignment::class);
     }
+
+    public function lecturers()
+    {
+        return $this->belongsToMany(User::class, 'course_lecturers');
+    }
+
+    public function teachingCourses()
+    {
+        return $this->belongsToMany(Course::class, 'course_lecturers');
+    }
+
+    public function materials()
+    {
+        return $this->hasMany(Material::class);
+    }
 }

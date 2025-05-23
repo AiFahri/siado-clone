@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\Material;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CourseController extends Controller
 {
+    // Menampilkan semua course (untuk admin atau dosen)
     public function all(Request $request)
     {
         $c = $request->query('count', 10);
@@ -46,6 +49,7 @@ class CourseController extends Controller
         return response()->json($courses);
     }
 
+    // Menampilkan detail course
     public function get(Course $course)
     {
         $userID = Auth::id();
@@ -54,6 +58,7 @@ class CourseController extends Controller
         return response()->json($course);
     }
 
+    // Menampilkan course yang diikuti oleh mahasiswa
     public function selfCourses(Request $request)
     {
         $user = Auth::user();
@@ -68,6 +73,7 @@ class CourseController extends Controller
         return response()->json($courses);
     }
 
+    // Enroll mahasiswa ke dalam course
     public function enroll($courseID)
     {
         $user = Auth::user();
@@ -84,13 +90,13 @@ class CourseController extends Controller
         return response()->json(['message' => 'enrolled successfully']);
     }
 
-
+    // Unenroll mahasiswa dari course
     public function unenroll($courseID)
     {
         $user = Auth::user();
         $course = Course::findOrFail($courseID);
 
-        if (! $course->students()->where('user_id', $user->id)->exists()) {
+        if (!$course->students()->where('user_id', $user->id)->exists()) {
             return response()->json(['error' => 'you are not enrolled in this course'], 403);
         }
 
@@ -103,5 +109,48 @@ class CourseController extends Controller
         $course->students()->detach($user->id);
 
         return response()->json(['message' => 'unenrolled and submissions deleted']);
+    }
+
+    // Assign dosen ke mata kuliah (admin)
+    public function assignLecturer($courseId, $lecturerId)
+    {
+        $course = Course::findOrFail($courseId);
+        $lecturer = User::where('id', $lecturerId)->where('role', 'lecturer')->first();
+
+        if (!$lecturer) {
+            return response()->json(['error' => 'Lecturer not found'], 404);
+        }
+
+        if ($course->lecturers()->where('user_id', $lecturerId)->exists()) {
+            return response()->json(['error' => 'Lecturer already assigned to this course'], 409);
+        }
+
+        $course->lecturers()->attach($lecturerId);
+
+        return response()->json(['message' => 'Lecturer assigned successfully']);
+    }
+
+    // List dosen yang mengajar di mata kuliah
+    public function listLecturers($courseId)
+    {
+        $course = Course::findOrFail($courseId);
+
+        $lecturers = $course->lecturers()->get(['users.id', 'users.name', 'users.email']);
+
+        return response()->json($lecturers);
+    }
+
+    // Remove dosen dari mata kuliah
+    public function removeLecturer($courseId, $lecturerId)
+    {
+        $course = Course::findOrFail($courseId);
+
+        if (!$course->lecturers()->where('user_id', $lecturerId)->exists()) {
+            return response()->json(['error' => 'Lecturer not assigned to this course'], 404);
+        }
+
+        $course->lecturers()->detach($lecturerId);
+
+        return response()->json(['message' => 'Lecturer removed from course']);
     }
 }

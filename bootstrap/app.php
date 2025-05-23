@@ -29,6 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'jwt.auth' => JWTAuthentication::class,
             'enrolled' => EnsureUserEnrolledInCourse::class,
+            'teachesCourse' => \App\Http\Middleware\EnsureUserTeachesCourse::class,
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

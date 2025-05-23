@@ -176,4 +176,42 @@ class SubmissionController extends Controller
 
         return response()->json($submissions);
     }
+
+    // Daftar semua submission untuk assignment (dosen)
+    public function listSubmissions($assignmentId)
+    {
+        $assignment = Assignment::findOrFail($assignmentId);
+        $user = Auth::user();
+
+        // Cek apakah dosen mengajar course assignment ini
+        if (! $assignment->course->lecturers()->where('user_id', $user->id)->exists()) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+
+        $submissions = $assignment->submissions()->with('user:id,name,email')->get();
+
+        return response()->json($submissions);
+    }
+
+    // Beri nilai dan feedback ke submission (dosen)
+    public function gradeSubmission(Request $request, $submissionId)
+    {
+        $request->validate([
+            'grade' => 'required|numeric|min:0|max:100',
+            'feedback' => 'nullable|string',
+        ]);
+
+        $submission = Submission::findOrFail($submissionId);
+        $user = Auth::user();
+
+        if (! $submission->assignment->course->lecturers()->where('user_id', $user->id)->exists()) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+
+        $submission->grade = $request->grade;
+        $submission->feedback = $request->feedback;
+        $submission->save();
+
+        return response()->json($submission);
+    }
 }

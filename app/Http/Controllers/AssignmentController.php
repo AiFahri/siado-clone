@@ -67,4 +67,99 @@ class AssignmentController extends Controller
 
         return response()->json($assignments);
     }
+
+    // List semua assignment dalam course (dosen)
+    public function index(Request $request, $courseId)
+    {
+        $course = Course::findOrFail($courseId);
+        $user = Auth::user();
+
+        if ($user->role !== 'lecturer' || ! $course->lecturers()->where('user_id', $user->id)->exists()) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+
+        $count = $request->query('count', 10);
+
+        $assignments = $course->assignments()->paginate($count);
+
+        return response()->json($assignments);
+    }
+
+    // Buat assignment baru (dosen)
+    public function store(Request $request, $courseId)
+    {
+        $course = Course::findOrFail($courseId);
+        $user = Auth::user();
+
+        if ($user->role !== 'lecturer' || ! $course->lecturers()->where('user_id', $user->id)->exists()) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'due_date' => 'required|date',
+        ]);
+
+        $assignment = $course->assignments()->create([
+            'title' => $request->title,
+            'description' => $request->description,
+            'due_date' => $request->due_date,
+        ]);
+
+        return response()->json($assignment, 201);
+    }
+
+    // Detail assignment, bisa untuk mahasiswa dan dosen
+    public function show(Assignment $assignment)
+    {
+        $user = Auth::user();
+        $course = $assignment->course;
+
+        if ($user->role === 'lecturer' && $course->lecturers()->where('user_id', $user->id)->exists()) {
+            return response()->json($assignment);
+        }
+
+        if ($user->role === 'student' && $course->students()->where('user_id', $user->id)->exists()) {
+            return response()->json($assignment);
+        }
+
+        return response()->json(['error' => 'Access denied'], 403);
+    }
+
+    // Update assignment (dosen)
+    public function update(Request $request, Assignment $assignment)
+    {
+        $user = Auth::user();
+        $course = $assignment->course;
+
+        if ($user->role !== 'lecturer' || ! $course->lecturers()->where('user_id', $user->id)->exists()) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+
+        $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'description' => 'sometimes|required|string',
+            'due_date' => 'sometimes|required|date',
+        ]);
+
+        $assignment->update($request->only(['title', 'description', 'due_date']));
+
+        return response()->json($assignment);
+    }
+
+    // Hapus assignment (dosen)
+    public function destroy(Assignment $assignment)
+    {
+        $user = Auth::user();
+        $course = $assignment->course;
+
+        if ($user->role !== 'lecturer' || ! $course->lecturers()->where('user_id', $user->id)->exists()) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+
+        $assignment->delete();
+
+        return response()->json(['message' => 'Assignment deleted']);
+    }
 }

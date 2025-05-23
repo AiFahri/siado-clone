@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
             AssignmentSeeder::class,
 
             SubmissionSeeder::class,
+            
+            MaterialSeeder::class,
         ]);
     }
 }
