@@ -8,7 +8,7 @@ class Material extends Model
 {
     protected $fillable = [
         'title',
-        'content',    // bisa berupa teks materi
+        'content',
         'course_id',
         'created_at',
         'updated_at',

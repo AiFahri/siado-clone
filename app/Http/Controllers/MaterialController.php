@@ -8,6 +8,20 @@ use Illuminate\Support\Facades\Auth;
 
 class MaterialController extends Controller
 {
+
+    public function studentListMaterials(Course $course)
+    {
+        $user = Auth::user();
+
+        if (!$course->students()->where('user_id', $user->id)->exists()) {
+            return response()->json(['error' => 'Access denied: You are not enrolled in this course'], 403);
+        }
+
+        $materials = $course->materials()->get();
+
+        return response()->json($materials);
+    }
+
     public function listMaterials(Course $course)
     {
         $user = Auth::user();

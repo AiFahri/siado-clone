@@ -69,12 +69,11 @@ class AssignmentController extends Controller
     }
 
     // List semua assignment dalam course (dosen)
-    public function index(Request $request, $courseId)
+    public function index(Request $request, Course $course)
     {
-        $course = Course::findOrFail($courseId);
         $user = Auth::user();
 
-        if ($user->role !== 'lecturer' || ! $course->lecturers()->where('user_id', $user->id)->exists()) {
+        if (! $course->lecturers()->where('user_id', $user->id)->exists()) {
             return response()->json(['error' => 'Access denied'], 403);
         }
 
@@ -85,10 +84,10 @@ class AssignmentController extends Controller
         return response()->json($assignments);
     }
 
+
     // Buat assignment baru (dosen)
-    public function store(Request $request, $courseId)
+    public function store(Request $request, Course $course)
     {
-        $course = Course::findOrFail($courseId);
         $user = Auth::user();
 
         if ($user->role !== 'lecturer' || ! $course->lecturers()->where('user_id', $user->id)->exists()) {
@@ -111,10 +110,14 @@ class AssignmentController extends Controller
     }
 
     // Detail assignment, bisa untuk mahasiswa dan dosen
-    public function show(Assignment $assignment)
+    public function show(Course $course, Assignment $assignment)
     {
         $user = Auth::user();
-        $course = $assignment->course;
+
+        // Pastikan assignment memang milik course dari route
+        if ($assignment->course_id !== $course->id) {
+            return response()->json(['error' => 'Assignment does not belong to this course'], 400);
+        }
 
         if ($user->role === 'lecturer' && $course->lecturers()->where('user_id', $user->id)->exists()) {
             return response()->json($assignment);
@@ -161,5 +164,27 @@ class AssignmentController extends Controller
         $assignment->delete();
 
         return response()->json(['message' => 'Assignment deleted']);
+    }
+
+    public function getAssignment(Course $course, Assignment $assignment)
+    {
+        $user = Auth::user();
+
+        // Pastikan assignment memang milik course yang diminta
+        if ($assignment->course_id !== $course->id) {
+            return response()->json(['error' => 'Assignment does not belong to the given course'], 400);
+        }
+
+        // Cek apakah user mahasiswa dan ter-enroll di course
+        if ($user->role !== 'student' || ! $course->students()->where('user_id', $user->id)->exists()) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+
+        // Cek apakah user sudah submit assignment ini
+        $assignment->has_submit = $assignment->submissions()
+            ->where('user_id', $user->id)
+            ->exists();
+
+        return response()->json($assignment);
     }
 }

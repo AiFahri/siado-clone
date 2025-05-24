@@ -44,7 +44,7 @@ Route::middleware('jwt.auth')->group(function () {
         // CRUD assignments (tugas)
         Route::post('/courses/{course}/assignments', [AssignmentController::class, 'store']);
         Route::get('/courses/{course}/assignments', [AssignmentController::class, 'index']);
-        Route::get('/assignments/{assignment}', [AssignmentController::class, 'show']);
+        Route::get('/courses/{course}/assignments/{assignment}', [AssignmentController::class, 'show']);
         Route::patch('/assignments/{assignment}', [AssignmentController::class, 'update']);
         Route::delete('/assignments/{assignment}', [AssignmentController::class, 'destroy']);
 
@@ -60,12 +60,14 @@ Route::middleware('jwt.auth')->group(function () {
         Route::delete('/courses/{course}/materials/{material}', [MaterialController::class, 'deleteMaterial']);
     });
 
-    // Route akses assignment & submission hanya untuk mahasiswa yang enrolled
+    // Route akses assignment, submission, dan materi hanya untuk mahasiswa yang enrolled
     Route::middleware(['role:student', 'enrolled'])->group(function () {
         Route::get('/courses/{course}/assignments', [AssignmentController::class, 'courseAssignment'])
             ->where('course', '[0-9]+');
         Route::get('/assignments/{assignment}', [AssignmentController::class, 'showAssignment']);
 
+        Route::get('/courses/{course}/assignments/{assignment}', [AssignmentController::class, 'getAssignment'])
+            ->where('assignment', '[0-9]+');
         Route::get('/courses/{course}/assignments/{assignment}/submissions', [SubmissionController::class, 'userAssignmentSubmission'])
             ->where(['course' => '[0-9]+', 'assignment' => '[0-9]+']);
         Route::post('/courses/{course}/assignments/{assignment}/submissions', [SubmissionController::class, 'storeSubmission'])
@@ -74,6 +76,8 @@ Route::middleware('jwt.auth')->group(function () {
             ->where(['course' => '[0-9]+', 'assignment' => '[0-9]+']);
         Route::delete('/courses/{course}/assignments/{assignment}/submissions', [SubmissionController::class, 'deleteSubmission'])
             ->where(['course' => '[0-9]+', 'assignment' => '[0-9]+']);
+
+        Route::get('/courses/{course}/materials', [MaterialController::class, 'studentListMaterials'])->where('course', '[0-9]+');
     });
 
     Route::middleware(['jwt.auth', 'role:admin'])->prefix('admin')->group(function () {

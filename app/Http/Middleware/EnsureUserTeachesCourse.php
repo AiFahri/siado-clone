@@ -23,6 +23,10 @@ class EnsureUserTeachesCourse
 
         $course = $request->route('course');
 
+        if (is_numeric($course)) {
+            $course = \App\Models\Course::find($course);
+        }
+
         if (! $course || ! $course->lecturers()->where('user_id', $user->id)->exists()) {
             return response()->json(['error' => 'Access denied: You do not teach this course'], 403);
         }
