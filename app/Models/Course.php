@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Course extends Model
 {
+    protected $fillable = [
+        'code',
+        'name',
+        'credits',
+    ];
+
     protected $hidden = [
         'created_at',
         'updated_at',
@@ -26,13 +32,20 @@ class Course extends Model
         return $this->belongsToMany(User::class, 'course_lecturers');
     }
 
-    public function teachingCourses()
-    {
-        return $this->belongsToMany(Course::class, 'course_lecturers');
-    }
-
     public function materials()
     {
         return $this->hasMany(Material::class);
+    }
+
+    public static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($course) {
+            $course->assignments()->delete();
+            $course->materials()->delete();
+            $course->students()->detach();
+            $course->lecturers()->detach();
+        });
     }
 }

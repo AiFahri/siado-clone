@@ -64,7 +64,13 @@ class CourseController extends Controller
         $user = Auth::user();
         $c = $request->query('count', 10);
 
-        $courses = $user->enrolledCourses()->paginate($c);
+        if ($user->role === 'student') {
+            $courses = $user->enrolledCourses()->paginate($c);
+        } elseif ($user->role === 'lecturer') {
+            $courses = $user->teachingCourses()->paginate($c);
+        } else {
+            return response()->json(['error' => 'Role not supported'], 403);
+        }
 
         $courses->getCollection()->transform(function ($course) {
             return $course->makeHidden('pivot');
@@ -72,6 +78,7 @@ class CourseController extends Controller
 
         return response()->json($courses);
     }
+
 
     // Enroll mahasiswa ke dalam course
     public function enroll($courseID)

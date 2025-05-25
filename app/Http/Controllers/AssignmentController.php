@@ -84,7 +84,6 @@ class AssignmentController extends Controller
         return response()->json($assignments);
     }
 
-
     // Buat assignment baru (dosen)
     public function store(Request $request, Course $course)
     {
@@ -131,8 +130,13 @@ class AssignmentController extends Controller
     }
 
     // Update assignment (dosen)
-    public function update(Request $request, Assignment $assignment)
+    public function update(Request $request, Course $course, Assignment $assignment)
     {
+
+        if ($assignment->course_id !== $course->id) {
+            return response()->json(['error' => 'Assignment does not belong to this course'], 400);
+        }
+
         $user = Auth::user();
         $course = $assignment->course;
 
@@ -152,7 +156,7 @@ class AssignmentController extends Controller
     }
 
     // Hapus assignment (dosen)
-    public function destroy(Assignment $assignment)
+    public function destroy(Course $course, Assignment $assignment)
     {
         $user = Auth::user();
         $course = $assignment->course;

@@ -144,4 +144,38 @@ class AdminController extends Controller
 
         return response()->json($lecturers);
     }
+
+    public function createCourse(Request $request)
+    {
+        $validatedData = $request->validate([
+            'code' => 'required|string|max:255|unique:courses,code',
+            'name' => 'required|string|max:255',
+            'credits' => 'required|integer|min:1',
+        ]);
+
+        $course = Course::create($validatedData);
+
+        return response()->json($course, 201);
+    }
+
+    public function updateCourse(Request $request, Course $course)
+    {
+        $validated = $request->validate([
+            'code' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
+            'credits' => 'required|integer|min:1',
+        ]);
+
+        $course->update($validated);
+
+        return response()->json($course);
+    }
+
+    public function deleteCourse(Course $course)
+    {
+
+        $course->delete();
+
+        return response()->json(['message' => 'Course deleted']);
+    }
 }

@@ -19,20 +19,22 @@ Route::middleware('jwt.auth')->group(function () {
 
     // Semua user (student, lecturer, admin) bisa akses data diri dan data yang terkait dengan user sendiri
     Route::prefix('/users/_self')->group(function () {
-        Route::get('', [JWTAuthController::class, 'me']);
+        Route::get('/', [JWTAuthController::class, 'me']);
         Route::get('/courses', [CourseController::class, 'selfCourses']);
         Route::get('/assignments', [AssignmentController::class, 'selfAssignments']);
         Route::get('/submissions', [SubmissionController::class, 'selfSubmissions']);
     });
 
-    // Route /courses hanya untuk admin dan dosen (lecturer)
-    Route::middleware('role:admin,lecturer')->prefix('/courses')->group(function () {
-        Route::get('', [CourseController::class, 'all']);
+    Route::prefix('/courses')->group(function () {
+        Route::get('/', [CourseController::class, 'all']);
 
-        // Admin/dosen boleh enroll dan unenroll user ke course
+        Route::get('/{course}', [CourseController::class, 'get'])->where('course', '[0-9]+');
         Route::post('/{course}', [CourseController::class, 'enroll'])->where('course', '[0-9]+');
         Route::delete('/{course}', [CourseController::class, 'unenroll'])->where('course', '[0-9]+');
+    });
 
+    // Route /courses hanya untuk admin dan dosen (lecturer)
+    Route::middleware('role:admin,lecturer')->prefix('/courses')->group(function () {
         // Admin bisa assign dosen ke course
         Route::post('/{course}/lecturers/{lecturer}', [CourseController::class, 'assignLecturer'])->where(['course' => '[0-9]+', 'lecturer' => '[0-9]+']);
         Route::get('/{course}/lecturers', [CourseController::class, 'listLecturers'])->where('course', '[0-9]+');
@@ -45,13 +47,13 @@ Route::middleware('jwt.auth')->group(function () {
         Route::post('/courses/{course}/assignments', [AssignmentController::class, 'store']);
         Route::get('/courses/{course}/assignments', [AssignmentController::class, 'index']);
         Route::get('/courses/{course}/assignments/{assignment}', [AssignmentController::class, 'show']);
-        Route::patch('/assignments/{assignment}', [AssignmentController::class, 'update']);
-        Route::delete('/assignments/{assignment}', [AssignmentController::class, 'destroy']);
+        Route::patch('/courses/{course}/assignments/{assignment}', [AssignmentController::class, 'update']);
+        Route::delete('/courses/{course}/assignments/{assignment}', [AssignmentController::class, 'destroy']);
 
         // Melihat submission dan memberi nilai
         Route::get('/assignments/{assignment}/submissions', [SubmissionController::class, 'listSubmissions']);
         Route::post('/submissions/{submission}/grade', [SubmissionController::class, 'gradeSubmission']);
-
+        
         // Routes khusus materi (materials)
         Route::get('/courses/{course}/materials', [MaterialController::class, 'listMaterials']);
         Route::post('/courses/{course}/materials', [MaterialController::class, 'storeMaterial']);
@@ -64,10 +66,8 @@ Route::middleware('jwt.auth')->group(function () {
     Route::middleware(['role:student', 'enrolled'])->group(function () {
         Route::get('/courses/{course}/assignments', [AssignmentController::class, 'courseAssignment'])
             ->where('course', '[0-9]+');
-        Route::get('/assignments/{assignment}', [AssignmentController::class, 'showAssignment']);
+        Route::get('/courses/{course}/assignments/{assignment}', [AssignmentController::class, 'getAssignment']);
 
-        Route::get('/courses/{course}/assignments/{assignment}', [AssignmentController::class, 'getAssignment'])
-            ->where('assignment', '[0-9]+');
         Route::get('/courses/{course}/assignments/{assignment}/submissions', [SubmissionController::class, 'userAssignmentSubmission'])
             ->where(['course' => '[0-9]+', 'assignment' => '[0-9]+']);
         Route::post('/courses/{course}/assignments/{assignment}/submissions', [SubmissionController::class, 'storeSubmission'])
@@ -89,5 +89,9 @@ Route::middleware('jwt.auth')->group(function () {
         Route::post('/courses/{course}/lecturers/{lecturer}', [AdminController::class, 'assignLecturerToCourse']);
         Route::get('/courses/{course}/lecturers', [AdminController::class, 'listLecturersInCourse']);
         Route::delete('/courses/{course}/lecturers/{lecturer}', [AdminController::class, 'removeLecturerFromCourse']);
+
+        Route::post('/courses', [AdminController::class, 'createCourse']);
+        Route::patch('/courses/{course}', [AdminController::class, 'updateCourse']);
+        Route::delete('/courses/{course}', [AdminController::class, 'deleteCourse']);
     });
 });
