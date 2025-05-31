@@ -60,6 +60,7 @@ Route::middleware('jwt.auth')->group(function () {
         Route::get('/courses/{course}/materials/{material}', [MaterialController::class, 'showMaterial']);
         Route::patch('/courses/{course}/materials/{material}', [MaterialController::class, 'updateMaterial']);
         Route::delete('/courses/{course}/materials/{material}', [MaterialController::class, 'deleteMaterial']);
+        Route::get('/courses/{course}/students', [CourseController::class, 'getCourseStudents']);
     });
 
     // Route akses assignment, submission, dan materi hanya untuk mahasiswa yang enrolled
@@ -93,5 +94,14 @@ Route::middleware('jwt.auth')->group(function () {
         Route::post('/courses', [AdminController::class, 'createCourse']);
         Route::patch('/courses/{course}', [AdminController::class, 'updateCourse']);
         Route::delete('/courses/{course}', [AdminController::class, 'deleteCourse']);
+        
+        Route::get('/courses/{course}/students', [AdminController::class, 'getStudentsInCourse']);
+        Route::post('/courses/{course}/students/{student}', [AdminController::class, 'addStudentToCourse']);
+        Route::delete('/courses/{course}/students/{student}', [AdminController::class, 'removeStudentFromCourse']);
+        Route::get('/stats', [AdminController::class, 'getAdminStats']);
+    });
+
+    Route::middleware(['jwt.auth', 'role:lecturer'])->group(function () {
+        Route::get('/lecturer/stats', [CourseController::class, 'getLecturerStats']);
     });
 });
