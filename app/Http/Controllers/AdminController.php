@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
@@ -178,4 +179,100 @@ class AdminController extends Controller
 
         return response()->json(['message' => 'Course deleted']);
     }
+
+    /**
+     * Daftar mahasiswa yang terdaftar di mata kuliah tertentu.
+     */
+    public function getStudentsInCourse($courseId)
+    {
+        $course = Course::findOrFail($courseId);
+
+        $students = $course->students()->get(['users.id', 'users.name', 'users.email']);
+
+        return response()->json($students);
+    }
+
+    /**
+     * Tambahkan mahasiswa ke mata kuliah.
+     */
+    public function addStudentToCourse($courseId, $studentId)
+    {
+        $course = Course::findOrFail($courseId);
+        $student = User::where('id', $studentId)->where('role', 'student')->first();
+
+        if (!$student) {
+            return response()->json(['error' => 'Student not found'], 404);
+        }
+
+        if ($course->students()->where('user_id', $studentId)->exists()) {
+            return response()->json(['error' => 'Student already enrolled in this course'], 409);
+        }
+
+        $course->students()->attach($studentId, [
+            'created_at' => now(),
+        ]);
+
+        return response()->json(['message' => 'Student enrolled to course successfully']);
+    }
+
+    /**
+     * Hapus mahasiswa dari mata kuliah.
+     */
+    public function removeStudentFromCourse($courseId, $studentId)
+    {
+        $course = Course::findOrFail($courseId);
+
+        if (!$course->students()->where('user_id', $studentId)->exists()) {
+            return response()->json(['error' => 'Student not enrolled in this course'], 404);
+        }
+
+        // Hapus submission mahasiswa untuk assignment di course ini
+        $assignmentIDs = $course->assignments()->pluck('id');
+        \App\Models\Submission::whereIn('assignment_id', $assignmentIDs)
+            ->where('user_id', $studentId)
+            ->delete();
+
+        $course->students()->detach($studentId);
+
+        return response()->json(['message' => 'Student removed from course and submissions deleted']);
+    }
+
+    /**
+     * Mendapatkan statistik untuk admin
+     */
+    public function getAdminStats()
+    {
+        $user = Auth::user();
+        
+        if ($user->role !== 'admin') {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+
+        $totalStudents = User::where('role', 'student')->count();
+        $totalLecturers = User::where('role', 'lecturer')->count();
+        $totalAdmins = User::where('role', 'admin')->count();
+        $totalCourses = Course::count();
+        $totalAssignments = \App\Models\Assignment::count();
+        $totalSubmissions = \App\Models\Submission::count();
+        $avgStudentsPerCourse = \DB::table('course_enrollments')
+            ->selectRaw('AVG(student_count) as average')
+            ->from(function($query) {
+                $query->select('course_id', \DB::raw('COUNT(user_id) as student_count'))
+                      ->from('course_enrollments')
+                      ->groupBy('course_id');
+            }, 'counts')
+            ->value('average');
+        
+        return response()->json([
+            'total_students' => $totalStudents,
+            'total_lecturers' => $totalLecturers,
+            'total_admins' => $totalAdmins,
+            'total_courses' => $totalCourses,
+            'total_assignments' => $totalAssignments,
+            'total_submissions' => $totalSubmissions,
+            'avg_students_per_course' => round($avgStudentsPerCourse, 1)
+        ]);
+    }
 }
+
+
