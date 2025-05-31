@@ -32,7 +32,7 @@ class AssignmentSeeder extends Seeder
             [
                 'title' => 'Analisis Kerentanan Web',
                 'description' => 'Lakukan analisis sederhana terhadap aplikasi web yang rentan (gunakan DVWA atau OWASP Juice Shop). Identifikasi minimal 3 jenis serangan umum (seperti XSS, SQL Injection), dan buat laporan serta simulasi eksploitasi.',
-                'due_date' => now()->addDays(rand(2, 4)),
+                'due_date' => now()->subDays(2),
                 'created_at' => now(),
                 'updated_at' => now(),
                 'course_id' => 3,
