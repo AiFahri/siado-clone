@@ -57,7 +57,20 @@ class CourseController extends Controller
 
         return response()->json($course);
     }
-
+public function getCourseStudents(Course $course)
+{
+    $user = Auth::user();
+    if ($user->role !== 'lecturer' || !$course->lecturers()->where('user_id', $user->id)->exists()) {
+        return response()->json(['error' => 'Access denied'], 403);
+    }
+    
+    $students = $course->students()->get(['users.id', 'users.name', 'users.email']);
+    
+    return response()->json([
+        'students' => $students,
+        'count' => $students->count()
+    ]);
+}
     // Menampilkan course yang diikuti oleh mahasiswa
     public function selfCourses(Request $request)
     {
@@ -160,4 +173,40 @@ class CourseController extends Controller
 
         return response()->json(['message' => 'Lecturer removed from course']);
     }
+
+    /**
+     * Mendapatkan statistik untuk dosen
+     */
+    public function getLecturerStats()
+    {
+        $user = Auth::user();
+        
+        if ($user->role !== 'lecturer') {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+        
+        $courses = $user->teachingCourses;
+        $totalCourses = $courses->count();
+        $courseIds = $courses->pluck('id')->toArray();
+        $totalAssignments = \App\Models\Assignment::whereIn('course_id', $courseIds)->count();
+        $needGrading = \App\Models\Submission::whereHas('assignment', function($query) use ($courseIds) {
+            $query->whereIn('course_id', $courseIds);
+        })->whereNull('grade')->count();
+        $graded = \App\Models\Submission::whereHas('assignment', function($query) use ($courseIds) {
+            $query->whereIn('course_id', $courseIds);
+        })->whereNotNull('grade')->count();
+        $totalStudents = \DB::table('course_enrollments')
+            ->whereIn('course_id', $courseIds)
+            ->distinct('user_id')
+            ->count('user_id');
+        
+        return response()->json([
+            'total_courses' => $totalCourses,
+            'total_assignments' => $totalAssignments,
+            'submissions_need_grading' => $needGrading,
+            'submissions_graded' => $graded,
+            'total_students' => $totalStudents
+        ]);
+    }
 }
+
