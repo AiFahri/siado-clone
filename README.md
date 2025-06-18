@@ -1,61 +1,163 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SIADO Backend - Sistem Informasi Dosen (Backend API)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+SIADO Backend is a robust Laravel-based API that powers the SIADO academic management system. It provides comprehensive endpoints for course management, user authentication, assignment tracking, and student evaluation, designed to work with the separate React frontend.
 
-## About Laravel
+## ✨ Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Role-based access control** for administrators, lecturers, and students
+- **RESTful API architecture** with comprehensive endpoints
+- **JWT authentication** with secure token management
+- **Course management** with enrollment tracking and material organization
+- **Assignment system** with submission handling and grading
+- **User management** for administrators
+- **Comprehensive data validation** and error handling
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🛠️ Tech Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Backend**: Laravel 12 with PHP 8.2+
+- **Database**: MySQL/PostgreSQL
+- **Authentication**: JWT (tymon/jwt-auth ^2.2)
+- **Testing**: Pest PHP
+- **Development Tools**: Laravel Sail, Laravel Pint, Laravel Pail
 
-## Learning Laravel
+## 📋 Prerequisites
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- PHP 8.2 or higher
+- Composer
+- MySQL or PostgreSQL
+- Frontend application running on `http://localhost:3000`
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## 🚀 Getting Started
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 1. Clone the Repository
 
-## Laravel Sponsors
+```bash
+git clone https://github.com/AiFahri/siado-clone.git
+cd siado-clone
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 2. Install Dependencies
 
-### Premium Partners
+```bash
+composer install
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development/)**
-- **[Active Logic](https://activelogic.com)**
+### 3. Configure Environment
 
-## Contributing
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Edit `.env` to configure your database connection and JWT settings.
 
-## Code of Conduct
+### 4. Run Migrations
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+php artisan migrate
+```
 
-## Security Vulnerabilities
+### 5. Start Development Server
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan serve
+```
 
-## License
+## 🗂️ Project Structure
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```
+app/
+├── Http/
+│   ├── Controllers/     # API controllers
+│   └── Middleware/      # Request middleware
+├── Models/              # Eloquent models
+├── Services/            # Business logic services
+└── Exceptions/          # Exception handlers
+routes/
+├── api.php             # API route definitions
+└── web.php             # Web route definitions
+database/
+├── migrations/         # Database migrations
+└── seeders/            # Database seeders
+```
+
+## 🔐 Authentication & Role Management
+
+SIADO implements JWT-based authentication with role-based access control:
+
+- **Admin**: Full system access - user management, course management
+- **Lecturer**: Course teaching - assignment creation, grading, material management
+- **Student**: Course enrollment - assignment submission, material access
+
+## 📡 API Endpoints
+
+### Authentication
+- `POST /api/auth/signup` - User registration
+- `POST /api/auth/signin` - User login
+
+### User Management
+- `GET /api/users/_self` - Get current user profile
+- `GET /api/users/_self/courses` - Get user's enrolled courses
+- `GET /api/users/_self/assignments` - Get user's assignments
+- `GET /api/users/_self/submissions` - Get user's submissions
+
+### Course Management
+- `GET /api/courses` - List all available courses
+- `GET /api/courses/{course}` - Get course details
+- `POST /api/courses/{course}` - Enroll in a course
+- `DELETE /api/courses/{course}` - Unenroll from a course
+
+### Lecturer & Course Management
+- `POST /api/courses/{course}/lecturers/{lecturer}` - Assign lecturer to course
+- `GET /api/courses/{course}/lecturers` - List lecturers for a course
+- `DELETE /api/courses/{course}/lecturers/{lecturer}` - Remove lecturer from course
+- `GET /api/courses/{course}/students` - Get students enrolled in a course
+
+### Assignment Management (Lecturer)
+- `POST /api/lecturer/courses/{course}/assignments` - Create assignment
+- `GET /api/lecturer/courses/{course}/assignments` - List course assignments
+- `GET /api/lecturer/courses/{course}/assignments/{assignment}` - Get assignment details
+- `PATCH /api/lecturer/courses/{course}/assignments/{assignment}` - Update assignment
+- `DELETE /api/lecturer/courses/{course}/assignments/{assignment}` - Delete assignment
+- `GET /api/lecturer/assignments/{assignment}/submissions` - List submissions for an assignment
+- `POST /api/lecturer/submissions/{submission}/grade` - Grade a submission
+
+### Material Management (Lecturer)
+- `GET /api/lecturer/courses/{course}/materials` - List course materials
+- `POST /api/lecturer/courses/{course}/materials` - Create course material
+- `GET /api/lecturer/courses/{course}/materials/{material}` - Get material details
+- `PATCH /api/lecturer/courses/{course}/materials/{material}` - Update material
+- `DELETE /api/lecturer/courses/{course}/materials/{material}` - Delete material
+
+### Student Access
+- `GET /api/courses/{course}/assignments` - Get assignments for enrolled course
+- `GET /api/courses/{course}/assignments/{assignment}` - Get assignment details
+- `GET /api/courses/{course}/materials` - Get materials for enrolled course
+
+### Admin Management
+- `GET /api/admin/users` - List all users
+- `POST /api/admin/users` - Create new user
+- `PATCH /api/admin/users/{user}` - Update user
+- `DELETE /api/admin/users/{user}` - Delete user
+- `POST /api/admin/courses` - Create new course
+- `PATCH /api/admin/courses/{course}` - Update course
+- `DELETE /api/admin/courses/{course}` - Delete course
+- `GET /api/admin/courses/{course}/students` - List students in course
+- `POST /api/admin/courses/{course}/students/{student}` - Add student to course
+- `DELETE /api/admin/courses/{course}/students/{student}` - Remove student from course
+- `GET /api/admin/stats` - Get admin statistics
+
+### Lecturer Statistics
+- `GET /api/lecturer/stats` - Get lecturer statistics
+
+## 🔄 Frontend Integration
+
+This backend is designed to work with two frontend applications:
+
+### 1. [SIADO Frontend](https://github.com/AiFahri/siado-clone-fe)
+The primary frontend application built with React and TypeScript, focused on administrator and lecturer interfaces. It provides comprehensive dashboards, course management tools, and assignment grading capabilities.
+
+### 2. [StudentClub](https://github.com/lidwinae/studentclub)
+A student-focused web application built with Vue.js. StudentClub provides a clean, responsive interface for students to efficiently manage their academic activities, access course information, track assignments, and submit their work.
+
+Both frontends communicate with this API via HTTP requests, providing a complete academic management ecosystem for all user roles.
